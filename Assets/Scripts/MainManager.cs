@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -12,7 +11,8 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
-    
+    public Text BestScoreText;
+
     private bool m_Started = false;
     private int m_Points;
     
@@ -36,6 +36,18 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+
+        var bestScoreEntry = GameInfo.Current.BestScores.OrderBy(score => score.UserScore).Take(1).FirstOrDefault();
+        if (bestScoreEntry != null)
+        {
+            BestScoreText.text = $"Best score: {bestScoreEntry.UserScore} ({bestScoreEntry.UserName.ToUpper()})";
+        }
+        else
+        {
+            BestScoreText.text = "";
+        }
+
+        ScoreText.text = $"Score: {m_Points} ({GameInfo.Current.CurrentUserName.ToUpper()})";
     }
 
     private void Update()
@@ -65,12 +77,14 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"Score: {m_Points} ({GameInfo.Current.CurrentUserName.ToUpper()})";
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        DataManager.SaveGameInfo(m_Points);
     }
 }
